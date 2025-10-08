@@ -1,14 +1,13 @@
 version: 0.2
 
 phases:
-install:
-  commands:
-    - echo "Installing kubectl"
-    - curl -LO https://dl.k8s.io/release/v1.30.0/bin/linux/amd64/kubectl
-    - chmod +x kubectl
-    - mv kubectl /usr/local/bin/
-    - kubectl version --client
-
+  install:
+    commands:
+      - echo "Installing kubectl"
+      - curl -LO https://dl.k8s.io/release/v1.30.0/bin/linux/amd64/kubectl
+      - chmod +x kubectl
+      - mv kubectl /usr/local/bin/
+      - kubectl version --client
   pre_build:
     commands:
       - echo "Logging into ECR"
@@ -20,4 +19,10 @@ install:
       - echo "Building Docker image"
       - IMAGE_TAG=$(date +%Y%m%d%H%M%S)
       - docker build -t visitor-counter-app:$IMAGE_TAG .
-      - docker tag visitor-counter-app:$IMAGE_TAG 493512622090.dkr.ecr.ap-southe_
+      - docker tag visitor-counter-app:$IMAGE_TAG 493512622090.dkr.ecr.ap-southeast-1.amazonaws.com/visitor-counter-app:$IMAGE_TAG
+      - docker push 493512622090.dkr.ecr.ap-southeast-1.amazonaws.com/visitor-counter-app:$IMAGE_TAG
+  post_build:
+    commands:
+      - echo "Deploying to EKS"
+      - sed -i "s|IMAGE_PLACEHOLDER|493512622090.dkr.ecr.ap-southeast-1.amazonaws.com/visitor-counter-app:$IMAGE_TAG|g" k8s/deployment.yaml
+      - kubectl apply -f k8s/
