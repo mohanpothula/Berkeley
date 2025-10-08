@@ -15,11 +15,12 @@ phases:
       - aws eks update-kubeconfig --name visitor-dev --region ap-southeast-1
   build:
     commands:
-      - echo "Building Docker image"
-      - IMAGE_TAG=$(date +%Y%m%d%H%M%S)  # timestamp-based tag to avoid collisions
-      - docker build -t visitor-counter-app:$IMAGE_TAG .
-      - docker tag visitor-counter-app:$IMAGE_TAG 493512622090.dkr.ecr.ap-southeast-1.amazonaws.com/visitor-counter-app:$IMAGE_TAG
-      - docker push 493512622090.dkr.ecr.ap-southeast-1.amazonaws.com/visitor-counter-app:$IMAGE_TAG
+    - echo "Building Docker image"
+    - IMAGE_TAG=$(date +%Y%m%d%H%M%S)
+    - docker build -t visitor-counter-app:$IMAGE_TAG .
+    - docker tag visitor-counter-app:$IMAGE_TAG 493512622090.dkr.ecr.ap-southeast-1.amazonaws.com/visitor-counter-app:$IMAGE_TAG
+    - docker push 493512622090.dkr.ecr.ap-southeast-1.amazonaws.com/visitor-counter-app:$IMAGE_TAG
+
   post_build:
     commands:
       - echo "Deploying to EKS"
