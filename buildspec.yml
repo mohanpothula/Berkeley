@@ -6,6 +6,7 @@ phases:
       - echo "Installing kubectl"
       - curl -LO "https://dl.k8s.io/release/$(curl -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
       - chmod +x kubectl && mv kubectl /usr/local/bin/
+      - kubectl version --client
   pre_build:
     commands:
       - echo "Logging into ECR"
@@ -15,12 +16,15 @@ phases:
   build:
     commands:
       - echo "Building Docker image"
-      - docker build -t visitor-counter-app .
-      - docker tag visitor-counter-app:latest 493512622090.dkr.ecr.ap-southeast-1.amazonaws.com/visitor-counter-app:latest
-      - docker push 493512622090.dkr.ecr.ap-southeast-1.amazonaws.com/visitor-counter-app:latest
+      - IMAGE_TAG=$(date +%Y%m%d%H%M%S)  # timestamp-based tag to avoid collisions
+      - docker build -t visitor-counter-app:$IMAGE_TAG .
+      - docker tag visitor-counter-app:$IMAGE_TAG 493512622090.dkr.ecr.ap-southeast-1.amazonaws.com/visitor-counter-app:$IMAGE_TAG
+      - docker push 493512622090.dkr.ecr.ap-southeast-1.amazonaws.com/visitor-counter-app:$IMAGE_TAG
   post_build:
     commands:
       - echo "Deploying to EKS"
+      # Replace placeholder in deployment YAML with the actual image
+      - sed -i "s|IMAGE_PLACEHOLDER|493512622090.dkr.ecr.ap-southeast-1.amazonaws.com/visitor-counter-app:$IMAGE_TAG|g" k8s/deployment.yaml
       - kubectl apply -f k8s/
-
+      - echo "Deployment completed with image tag $IMAGE_TAG"
 
