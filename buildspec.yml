@@ -13,6 +13,7 @@ phases:
       - aws ecr get-login-password | docker login --username AWS --password-stdin 493512622090.dkr.ecr.ap-southeast-1.amazonaws.com
       - echo "Updating kubeconfig"
       - aws eks update-kubeconfig --name visitor-dev --region ap-southeast-1
+  
   build:
     commands:
     - echo "Building Docker image"
