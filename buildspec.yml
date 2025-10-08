@@ -1,0 +1,30 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      docker: 20
+    commands:
+      - echo "Installing kubectl & aws-iam-authenticator"
+      - curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+      - chmod +x kubectl && mv kubectl /usr/local/bin/
+  pre_build:
+    commands:
+      - echo "Logging into ECR"
+      - aws ecr get-login-password | docker login --username AWS --password-stdin <your-ecr-url>
+      - echo "Updating kubeconfig"
+      - aws eks update-kubeconfig --name visitor-dev --region ap-southeast-1
+  build:
+    commands:
+      - echo "Building Docker image"
+      - docker build -t visitor-counter-app .
+      - docker tag visitor-counter-app:latest 493512622090.dkr.ecr.ap-southeast-1.amazonaws.com/visitor-counter-app:latest
+      - docker push 493512622090.dkr.ecr.ap-southeast-1.amazonaws.com/visitor-counter-app:latest
+
+  post_build:
+    commands:
+      - echo "Deploying to EKS"
+      - kubectl apply -f k8s/
+artifacts:
+  files:
+    - '**/*'
