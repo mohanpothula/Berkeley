@@ -1,0 +1,32 @@
+stages:
+  - build
+  - push
+  - update-manifest
+
+variables:
+  IMAGE_TAG: "latest"
+  REGISTRY: "docker.io/<your-username>"
+
+build:
+  stage: build
+  image: docker:latest
+  services:
+    - docker:dind
+  script:
+    - docker build -t $REGISTRY/visitor-counter-app:$IMAGE_TAG .
+
+push:
+  stage: push
+  script:
+    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin $REGISTRY
+    - docker push $REGISTRY/visitor-counter-app:$IMAGE_TAG
+
+update-manifest:
+  stage: update-manifest
+  script:
+    - sed -i "s|image:.*|image: $REGISTRY/visitor-counter-app:$IMAGE_TAG|" k8s/deployment.yaml
+    - git config --global user.email "ci@gitlab.com"
+    - git config --global user.name "GitLab CI"
+    - git add k8s/deployment.yaml
+    - git commit -m "Update image tag to $IMAGE_TAG"
+    - git push origin main
