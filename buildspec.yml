@@ -14,7 +14,6 @@ phases:
       - aws ecr get-login-password | docker login --username AWS --password-stdin 493512622090.dkr.ecr.ap-southeast-1.amazonaws.com
       - echo "Updating kubeconfig"
       - aws eks update-kubeconfig --name visitor-dev --region ap-southeast-1
-      - kubectl get nodes
   build:
     commands:
       - echo "Building Docker image"
@@ -24,6 +23,8 @@ phases:
       - docker push 493512622090.dkr.ecr.ap-southeast-1.amazonaws.com/visitor-counter-app:$IMAGE_TAG
   post_build:
     commands:
+      - aws eks update-kubeconfig --name visitor-dev --region ap-southeast-1
       - echo "Deploying to EKS"
+      - kubectl get nodes
       - sed -i "s|<your-registry>/visitor-counter-app:latest|493512622090.dkr.ecr.ap-southeast-1.amazonaws.com/visitor-counter-app:$IMAGE_TAG|g" k8s/deployment.yaml
       - kubectl apply -f k8s/
