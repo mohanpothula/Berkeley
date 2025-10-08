@@ -1,15 +1,14 @@
 version: 0.2
 
 phases:
-  install:
-    commands:
-      - echo "Installing kubectl"
-      - KUBECTL_VERSION=$(curl -s https://dl.k8s.io/release/stable.txt)
-      - echo "Downloading kubectl $KUBECTL_VERSION"
-      - curl -LO https://dl.k8s.io/release/$KUBECTL_VERSION/bin/linux/amd64/kubectl
-      - chmod +x kubectl
-      - mv kubectl /usr/local/bin/
-      - kubectl version --client
+install:
+  commands:
+    - echo "Installing kubectl"
+    - curl -LO https://dl.k8s.io/release/v1.30.0/bin/linux/amd64/kubectl
+    - chmod +x kubectl
+    - mv kubectl /usr/local/bin/
+    - kubectl version --client
+
   pre_build:
     commands:
       - echo "Logging into ECR"
