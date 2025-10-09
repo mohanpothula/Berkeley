@@ -1,0 +1,50 @@
+stages:
+  - install
+  - pre_build
+  - build
+  - deploy
+
+variables:
+  IMAGE_TAG: "${CI_COMMIT_TIMESTAMP}"
+  ECR_REGISTRY: "493512622090.dkr.ecr.ap-southeast-1.amazonaws.com"
+  EKS_CLUSTER: "visitor-dev"
+  AWS_REGION: "ap-southeast-1"
+
+install:
+  stage: install
+  script:
+    - echo "Installing kubectl and docker-compose"
+    - curl -LO https://dl.k8s.io/release/v1.30.0/bin/linux/amd64/kubectl
+    - chmod +x kubectl && mv kubectl /usr/local/bin/
+    - curl -L "https://github.com/docker/compose/releases/download/v2.24.0/docker-compose-linux-x86_64" -o /usr/local/bin/docker-compose
+    - chmod +x /usr/local/bin/docker-compose
+    - kubectl version --client
+    - docker-compose version
+
+pre_build:
+  stage: pre_build
+  script:
+    - echo "Logging into ECR"
+    - aws ecr get-login-password | docker login --username AWS --password-stdin $ECR_REGISTRY
+    - echo "Verifying AWS identity"
+    - aws sts get-caller-identity
+    - echo "Updating kubeconfig"
+    - aws eks update-kubeconfig --name $EKS_CLUSTER --region $AWS_REGION
+
+build:
+  stage: build
+  script:
+    - echo "Building Docker image with docker-compose"
+    - docker-compose build visitor-counter-app
+    - docker tag visitor-counter-app:$IMAGE_TAG $ECR_REGISTRY/visitor-counter-app:$IMAGE_TAG
+    - docker push $ECR_REGISTRY/visitor-counter-app:$IMAGE_TAG
+
+deploy:
+  stage: deploy
+  script:
+    - aws eks update-kubeconfig --name $EKS_CLUSTER --region $AWS_REGION
+    - echo "Deploying to EKS"
+    - kubectl get nodes
+    - sed -i "s|<your-registry>/visitor-counter-app:latest|$ECR_REGISTRY/visitor-counter-app:$IMAGE_TAG|g" k8s/deployment.yaml
+    - kubectl apply -f k8s/
+  when: manual
