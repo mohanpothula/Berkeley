@@ -66,4 +66,3 @@ deploy:
     - kubectl apply -f k8s/
   when: manual
   allow_failure: false
-
