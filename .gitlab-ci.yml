@@ -16,9 +16,9 @@ variables:
   AWS_REGION: "ap-southeast-1"
 
 before_script:
-  - apk add --no-cache curl unzip bash sed
-  - curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-  - unzip awscliv2.zip && ./aws/install
+  - apk add --no-cache curl unzip bash sed python3 py3-pip
+  - pip3 install awscli --upgrade
+  - aws --version
   - curl -LO https://dl.k8s.io/release/v1.30.0/bin/linux/amd64/kubectl
   - chmod +x kubectl && mv kubectl /usr/local/bin/
   - curl -L "https://github.com/docker/compose/releases/download/v2.24.0/docker-compose-linux-x86_64" -o /usr/local/bin/docker-compose
@@ -59,5 +59,3 @@ deploy:
     - kubectl apply -f k8s/
   when: manual
   allow_failure: false
-
-
