@@ -27,24 +27,24 @@ before_script:
 install:
   stage: install
   script:
-    - echo "Installed kubectl and docker-compose"
+    - echo "✅ kubectl and docker-compose installed"
     - kubectl version --client
     - docker-compose version
 
 pre_build:
   stage: pre_build
   script:
-    - echo "Logging into ECR"
+    - echo "🔐 Logging into ECR"
     - aws ecr get-login-password | docker login --username AWS --password-stdin $ECR_REGISTRY
-    - echo "Verifying AWS identity"
+    - echo "🔍 Verifying AWS identity"
     - aws sts get-caller-identity
-    - echo "Updating kubeconfig"
+    - echo "🔧 Updating kubeconfig"
     - aws eks update-kubeconfig --name $EKS_CLUSTER --region $AWS_REGION
 
 build:
   stage: build
   script:
-    - echo "Building Docker image with docker-compose"
+    - echo "🐳 Building Docker image with docker-compose"
     - docker-compose build visitor-counter-app
     - docker tag visitor-counter-app:latest $ECR_REGISTRY/visitor-counter-app:$IMAGE_TAG
     - docker push $ECR_REGISTRY/visitor-counter-app:$IMAGE_TAG
@@ -52,9 +52,10 @@ build:
 deploy:
   stage: deploy
   script:
+    - echo "🚀 Deploying to EKS"
     - aws eks update-kubeconfig --name $EKS_CLUSTER --region $AWS_REGION
-    - echo "Deploying to EKS"
     - kubectl get nodes
     - sed -i "s|<your-registry>/visitor-counter-app:latest|$ECR_REGISTRY/visitor-counter-app:$IMAGE_TAG|g" k8s/deployment.yaml
     - kubectl apply -f k8s/
   when: manual
+  allow_failure: false
