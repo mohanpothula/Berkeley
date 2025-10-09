@@ -24,7 +24,7 @@ phases:
       - echo "Building Docker image compose"
       - IMAGE_TAG=$(date +%Y%m%d%H%M%S)
       - export IMAGE_TAG=$IMAGE_TAG
-      - docker-compose build web
+      - docker-compose build visitor-counter-app
       - docker tag visitor-counter-app:$IMAGE_TAG 493512622090.dkr.ecr.ap-southeast-1.amazonaws.com/visitor-counter-app:$IMAGE_TAG
       - docker push 493512622090.dkr.ecr.ap-southeast-1.amazonaws.com/visitor-counter-app:$IMAGE_TAG
   post_build:
