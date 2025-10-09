@@ -1,4 +1,4 @@
-stagesimage: amazonlinux:2
+image: amazonlinux:2
 
 stages:
   - install
